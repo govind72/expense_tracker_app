@@ -1,12 +1,12 @@
 import 'dart:convert';
-
+import 'package:expense_tracker_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'home_page.dart';
 
 class SignUp extends StatefulWidget {
+  static const String id = 'signup_screen';
   const SignUp({Key? key}) : super(key: key);
 
   @override
@@ -20,11 +20,10 @@ class _SignUpState extends State<SignUp> {
   TextEditingController confirmPasswordController = TextEditingController();
 
   Future<void> signUp() async {
-    BuildContext localContext = context; // Store the context in a local variable
+    BuildContext localContext = context;
 
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/api/register'), // Replace with your Laravel API endpoint
-
+      Uri.parse('http://10.0.2.2:8000/api/register'),
       body: {
         'name': usernameController.text,
         'email': emailController.text,
@@ -35,12 +34,9 @@ class _SignUpState extends State<SignUp> {
 
     if (response.statusCode == 200) {
       final token = json.decode(response.body)['token'];
-
-      // Use await directly to get SharedPreferences instance
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('token', token);
-
-      Navigator.push(localContext, MaterialPageRoute(builder: (_) => HomePage()));
+      Navigator.pushNamed(localContext, HomePage.id);
     } else {
       // Handle other response codes or display an error message
       print('Error: ${json.decode(response.body)['message']}');
@@ -48,6 +44,13 @@ class _SignUpState extends State<SignUp> {
   }
 
   @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -122,6 +125,24 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                        "Already Registered ?"
+                    ),
+                    TextButton(
+                      onPressed: (){
+                        Navigator.pushNamed(context, LoginScreen.id);
+                      },
+                      child: const Center(
+                        child: Text("Log in"),
+                      ),
+
+                    )
+
+                  ],
+                )
               ],
             ),
           ),

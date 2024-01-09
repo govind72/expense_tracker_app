@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:expense_tracker_app/screens/home_page.dart';
+import 'package:expense_tracker_app/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
+  static const String id = 'login_screen';
   const LoginScreen({super.key});
 
   @override
@@ -10,7 +14,33 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  Future<void> logIn() async{
+    BuildContext localContext = context;
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8000/api/login'),
+      body: {
+        'email': emailController.text,
+        'password': passwordController.text,
+      },
+    );
+    if (response.statusCode == 200) {
+      final token = json.decode(response.body)['token'];
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('token', token);
+      Navigator.pushNamed(localContext, HomePage.id);
+    } else {
+      print('Error: ${json.decode(response.body)['message']}');
+    }
+  }
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -35,20 +65,22 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(
             height: 50,
           ),
-          const Padding(
-            padding: EdgeInsets.all(10),
+           Padding(
+            padding: const EdgeInsets.all(10),
             child: TextField(
-              decoration: InputDecoration(
+              controller: emailController,
+              decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'User Name',
+                  labelText: 'email',
                   hintText: 'Enter valid mail id as abc@gmail.com'),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.all(10),
+           Padding(
+            padding: const EdgeInsets.all(10),
             child: TextField(
+              controller: passwordController,
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Password',
                   hintText: 'Enter your secure password'),
@@ -64,10 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 fixedSize: MaterialStatePropertyAll(Size(140, 50))
 
             ),
-            onPressed: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => HomePage()));
-            },
+            onPressed: logIn,
             child: const Center(
               child:  Text(
                 'Login',
@@ -75,6 +104,24 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "New Here ?"
+              ),
+              TextButton(
+                onPressed: (){
+                  Navigator.pushNamed(context, SignUp.id);
+                },
+                child: const Center(
+                  child: Text("Register"),
+                ),
+
+              )
+
+            ],
+          )
 
         ],
       ),
