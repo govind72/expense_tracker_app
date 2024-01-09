@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import 'home_page.dart';
 
@@ -11,6 +11,36 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
+
+  Future<void> signUp() async {
+    BuildContext localContext = context; // Store the context in a local variable
+
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1:8000/api/register'), // Replace with your Laravel API endpoint
+
+      body: {
+        'name': usernameController.text,
+        'email': emailController.text,
+        'password': passwordController.text,
+        'password_confirmation': confirmPasswordController.text,
+      },
+    );
+
+
+    if (response.statusCode == 200) {
+      // Use the localContext variable instead of context
+      Navigator.push(localContext, MaterialPageRoute(builder: (_) => HomePage()));
+    } else {
+      // Handle registration failure
+      // You might want to show an error message or retry registration
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,39 +61,43 @@ class _SignUpState extends State<SignUp> {
                 const SizedBox(
                   height: 50,
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(10),
+                 Padding(
+                  padding: const EdgeInsets.all(10),
                   child: TextField(
-                    decoration: InputDecoration(
+                    controller: usernameController,
+                    decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'User Name',
                         hintText: 'Enter username'),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(10),
+                 Padding(
+                  padding: const EdgeInsets.all(10),
                   child: TextField(
-                    decoration: InputDecoration(
+                    controller: emailController,
+                    decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'email',
                         hintText: 'Enter valid mail id as abc@gmail.com'),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(10),
+                 Padding(
+                  padding:const EdgeInsets.all(10),
                   child: TextField(
+                    controller: passwordController,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration:const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Password',
                         hintText: 'Enter your  password'),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(10),
+                 Padding(
+                  padding:const  EdgeInsets.all(10),
                   child: TextField(
+                    controller: confirmPasswordController,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Confirm Password',
                         hintText: 'Enter your password again'),
@@ -79,10 +113,7 @@ class _SignUpState extends State<SignUp> {
                       fixedSize: MaterialStatePropertyAll(Size(140, 50))
             
                   ),
-                  onPressed: () {
-                    Navigator.push(
-                        context, MaterialPageRoute(builder: (_) => HomePage()));
-                  },
+                  onPressed: signUp,
                   child: const Center(
                     child:  Text(
                       'Sign up',
