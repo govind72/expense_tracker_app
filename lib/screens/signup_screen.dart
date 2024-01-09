@@ -1,10 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home_page.dart';
 
 class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+  const SignUp({Key? key}) : super(key: key);
 
   @override
   State<SignUp> createState() => _SignUpState();
@@ -20,7 +23,7 @@ class _SignUpState extends State<SignUp> {
     BuildContext localContext = context; // Store the context in a local variable
 
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:8000/api/register'), // Replace with your Laravel API endpoint
+      Uri.parse('http://10.0.2.2:8000/api/register'), // Replace with your Laravel API endpoint
 
       body: {
         'name': usernameController.text,
@@ -30,30 +33,32 @@ class _SignUpState extends State<SignUp> {
       },
     );
 
-
     if (response.statusCode == 200) {
-      // Use the localContext variable instead of context
+      final token = json.decode(response.body)['token'];
+
+      // Use await directly to get SharedPreferences instance
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('token', token);
+
       Navigator.push(localContext, MaterialPageRoute(builder: (_) => HomePage()));
     } else {
-      // Handle registration failure
-      // You might want to show an error message or retry registration
+      // Handle other response codes or display an error message
+      print('Error: ${json.decode(response.body)['message']}');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset : false,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('SignUp Page'),
         backgroundColor: Colors.green,
       ),
       body: Stack(
         children: [
-
           SingleChildScrollView(
-            child : Column(
+            child: Column(
               children: [
                 const SizedBox(
                   height: 50,
@@ -61,7 +66,7 @@ class _SignUpState extends State<SignUp> {
                 const SizedBox(
                   height: 50,
                 ),
-                 Padding(
+                Padding(
                   padding: const EdgeInsets.all(10),
                   child: TextField(
                     controller: usernameController,
@@ -71,7 +76,7 @@ class _SignUpState extends State<SignUp> {
                         hintText: 'Enter username'),
                   ),
                 ),
-                 Padding(
+                Padding(
                   padding: const EdgeInsets.all(10),
                   child: TextField(
                     controller: emailController,
@@ -81,19 +86,19 @@ class _SignUpState extends State<SignUp> {
                         hintText: 'Enter valid mail id as abc@gmail.com'),
                   ),
                 ),
-                 Padding(
-                  padding:const EdgeInsets.all(10),
+                Padding(
+                  padding: const EdgeInsets.all(10),
                   child: TextField(
                     controller: passwordController,
                     obscureText: true,
-                    decoration:const InputDecoration(
+                    decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Password',
                         hintText: 'Enter your  password'),
                   ),
                 ),
-                 Padding(
-                  padding:const  EdgeInsets.all(10),
+                Padding(
+                  padding: const EdgeInsets.all(10),
                   child: TextField(
                     controller: confirmPasswordController,
                     obscureText: true,
@@ -103,31 +108,25 @@ class _SignUpState extends State<SignUp> {
                         hintText: 'Enter your password again'),
                   ),
                 ),
-                const SizedBox(
-                    height :25
-                ),
+                const SizedBox(height: 25),
                 ElevatedButton(
-            
-                  style:const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll<Color>(Colors.green),
-                      fixedSize: MaterialStatePropertyAll(Size(140, 50))
-            
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+                    fixedSize: MaterialStateProperty.all(const Size(140, 50)),
                   ),
                   onPressed: signUp,
                   child: const Center(
-                    child:  Text(
+                    child: Text(
                       'Sign up',
                       style: TextStyle(color: Colors.white, fontSize: 20),
                     ),
                   ),
                 ),
-            
               ],
             ),
           ),
         ],
       ),
-
     );
   }
 }
