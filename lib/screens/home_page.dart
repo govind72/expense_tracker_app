@@ -20,7 +20,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Fetch and load expenses when the widget is first created
     loadExpenses();
   }
 

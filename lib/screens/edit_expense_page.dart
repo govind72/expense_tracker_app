@@ -126,7 +126,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final expenseId = widget.expenseDetails['id'];
-
+    print(isSpent);
     final response = await http.patch(
       Uri.parse('http://10.0.2.2:8000/api/expenses/$expenseId'),
       headers: {
@@ -143,12 +143,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
     );
 
     if (response.statusCode == 200) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(),
-        ),
-      );
+      Navigator.pushReplacementNamed(context, HomePage.id);
 
     } else {
       print('Error: ${json.decode(response.body)['message']}');

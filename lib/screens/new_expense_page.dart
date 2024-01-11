@@ -46,7 +46,7 @@ class _NewExpensePageState extends State<NewExpensePage> {
     if (response.statusCode == 200) {
       // Navigator.pushNamed(localContext, HomePage.id);
       Navigator.pushReplacement(
-        context,
+        localContext,
         MaterialPageRoute(
           builder: (localContext) => const HomePage(),
         ),
