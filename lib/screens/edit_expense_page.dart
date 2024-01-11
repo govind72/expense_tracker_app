@@ -1,69 +1,46 @@
 import 'dart:convert';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'home_page.dart';
+import 'package:http/http.dart' as http;
 
-class NewExpensePage extends StatefulWidget {
-  static const String id = 'new_expense_page';
-  const NewExpensePage({Key? key});
+class EditExpensePage extends StatefulWidget {
+  static const String id = 'edit_expense_page';
+  final Map<String, dynamic> expenseDetails;
+
+  const EditExpensePage({Key? key, required this.expenseDetails}) : super(key: key);
 
   @override
-  State<NewExpensePage> createState() => _NewExpensePageState();
+  _EditExpensePageState createState() => _EditExpensePageState();
 }
 
-class _NewExpensePageState extends State<NewExpensePage> {
+class _EditExpensePageState extends State<EditExpensePage> {
   TextEditingController descriptionController = TextEditingController();
   TextEditingController amountController = TextEditingController();
   TextEditingController dateController = TextEditingController();
-  TextEditingController categoryPasswordController = TextEditingController();
-  var isSpent = 0; // Default value for spent
+  TextEditingController categoryController = TextEditingController();
+  int isSpent = 0;
 
-  Future<void> addExpense() async {
-    print(isSpent);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    BuildContext localContext = context;
-    final response = await http.post(
-
-      Uri.parse('http://10.0.2.2:8000/api/expenses'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-
-      body: {
-        'amount': amountController.text,
-        'description': descriptionController.text,
-        'date': dateController.text,
-        'category': categoryPasswordController.text,
-        'spent': isSpent==0 ? "1" : "0", // Convert boolean to string
-      },
-    );
-
-    if (response.statusCode == 200) {
-      // Navigator.pushNamed(localContext, HomePage.id);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (localContext) => const HomePage(),
-        ),
-      ).then((_) {
-        Navigator.popUntil(context, (route) => route.isFirst);
-      });
-
-    } else {
-      print('Error: ${json.decode(response.body)['message']}');
-    }
+  @override
+  void initState() {
+    super.initState();
+    // Initialize text controllers with existing expense details
+    descriptionController.text = widget.expenseDetails['description'];
+    amountController.text = widget.expenseDetails['amount']!.toString();
+    dateController.text = widget.expenseDetails['date'] ?? '';
+    categoryController.text = widget.expenseDetails['category'] ?? '';
+    isSpent = widget.expenseDetails['spent']==1 ? 0 : 1;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Expense'),
+
+        title: const Text('Edit Expense'),
         backgroundColor: Colors.green,
       ),
       body: Padding(
@@ -108,7 +85,7 @@ class _NewExpensePageState extends State<NewExpensePage> {
               },
             ),
             TextField(
-              controller: categoryPasswordController,
+              controller: categoryController,
               keyboardType: TextInputType.text,
               decoration: const InputDecoration(labelText: 'Category'),
             ),
@@ -116,8 +93,9 @@ class _NewExpensePageState extends State<NewExpensePage> {
             Row(
               children: [
                 const Text('Spent:'),
-                const SizedBox(width: 50,),
+                const SizedBox(width: 20),
                 ToggleSwitch(
+                  initialLabelIndex : isSpent,
                   customWidths: const [90.0, 90.0],
                   cornerRadius: 20.0,
                   activeBgColors: const [[Colors.red], [Colors.green]],
@@ -126,7 +104,6 @@ class _NewExpensePageState extends State<NewExpensePage> {
                   inactiveFgColor: Colors.white,
                   totalSwitches: 2,
                   labels: const ['Spent', 'Credit'],
-                  // icons: const [FontAwesomeIcons.yenSign, FontAwesomeIcons.times],
                   onToggle: (index) {
                     print('switched to: $index');
                     isSpent = index!;
@@ -134,14 +111,47 @@ class _NewExpensePageState extends State<NewExpensePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 30,),
+            const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: addExpense,
-              child: const Text('Add Expense'),
+              onPressed: _updateExpense,
+              child: const Text('Save Changes'),
             ),
           ],
         ),
       ),
+      );
+    }
+
+  void _updateExpense() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final expenseId = widget.expenseDetails['id'];
+
+    final response = await http.patch(
+      Uri.parse('http://10.0.2.2:8000/api/expenses/$expenseId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'amount': amountController.text,
+        'description': descriptionController.text,
+        'date': dateController.text,
+        'category': categoryController.text,
+        'spent': isSpent==0 ? '1' : '0',
+      }),
     );
+
+    if (response.statusCode == 200) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(),
+        ),
+      );
+
+    } else {
+      print('Error: ${json.decode(response.body)['message']}');
+    }
   }
 }

@@ -30,7 +30,16 @@ class _LoginScreenState extends State<LoginScreen> {
       final token = json.decode(response.body)['token'];
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('token', token);
-      Navigator.pushNamed(localContext, HomePage.id);
+      prefs.setString('loggedIn', "yes");
+      Navigator.pushReplacement(
+        localContext,
+        MaterialPageRoute(
+          builder: (context) => HomePage(),
+        ),
+      ).then((_) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      });
+
     } else {
       print('Error: ${json.decode(response.body)['message']}');
     }
@@ -112,7 +121,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               TextButton(
                 onPressed: (){
-                  Navigator.pushNamed(context, SignUp.id);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SignUp(),
+                    ),
+                  );
                 },
                 child: const Center(
                   child: Text("Register"),
