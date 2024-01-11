@@ -22,7 +22,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     loadExpenses();
   }
-
   Future<void> loadExpenses() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -198,8 +197,8 @@ class _HomePageState extends State<HomePage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
+                // Navigator.pop(context);
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => EditExpensePage(expenseDetails: expenseDetails),
